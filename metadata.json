@@ -1,0 +1,8 @@
+{
+  "name": "المدرسة الخاصة – Discover",
+  "description": "تطبيق تعليمي ذكي لمنهج Discover للصفوف الابتدائية (1-3) في مصر.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
