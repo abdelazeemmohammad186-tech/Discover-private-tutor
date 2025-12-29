@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, ArrowLeft, BookOpen, Brain, Image as ImageIcon, MessageCircle, Mic, RefreshCw, Send, StopCircle, Camera, VolumeX } from 'lucide-react';
+import { ArrowRight, ArrowLeft, BookOpen, Brain, Image as ImageIcon, MessageCircle, Mic, RefreshCw, Send, StopCircle, Camera, VolumeX, MicOff } from 'lucide-react';
 import { GradeLevel, ChatMessage } from '../types';
 import TutorAvatar, { TutorStatus } from './TutorAvatar';
 import ChatBubble from './ChatBubble';
@@ -28,18 +28,51 @@ const LessonView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [tutorStatus, setTutorStatus] = useState<TutorStatus>('idle');
   const [inputText, setInputText] = useState('');
+  const [isListening, setIsListening] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (!state) navigate('/');
-  }, [state, navigate]);
+    
+    // Initialize Speech Recognition
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = language === 'ar' ? 'ar-EG' : 'en-US';
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          handleInteraction('custom', transcript);
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+    }
+
+    return () => {
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
+        GeminiService.stopSpeech();
+    };
+  }, [state, navigate, language]);
 
   // Handle immediate scrolling to ensure text is visible when voice starts
   useEffect(() => {
     if (messages.length > 0) {
-        // Use 'auto' instead of 'smooth' for instant positioning when new content arrives
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }
   }, [messages]);
@@ -78,7 +111,6 @@ const LessonView: React.FC = () => {
       const responseText = await GeminiService.generateExplanation(grade, lesson.title, mode, language, customQuery, context);
       addMessage('model', responseText);
       
-      // Ensure the scroll happens right after the state update to show the text
       setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
           GeminiService.playTextAsSpeech(responseText, () => setTutorStatus('speaking'), () => setTutorStatus('idle'), language);
@@ -141,6 +173,22 @@ const LessonView: React.FC = () => {
     e.target.value = '';
   };
 
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      GeminiService.stopSpeech(); // Stop teacher if child wants to speak
+      setTutorStatus('idle');
+      try {
+        recognitionRef.current?.start();
+        setIsListening(true);
+      } catch (e) {
+        console.error("Recognition start error", e);
+      }
+    }
+  };
+
   const stopVoice = () => {
     GeminiService.stopSpeech();
     setTutorStatus('idle');
@@ -158,20 +206,19 @@ const LessonView: React.FC = () => {
       />
 
       <div className="bg-white shadow-md p-3 z-10 flex items-center gap-3 shrink-0 h-20">
-        <button onClick={() => { stopVoice(); navigate(-1); }} className="p-2 bg-slate-100 rounded-full">{isRTL ? <ArrowRight /> : <ArrowLeft />}</button>
+        <button onClick={() => { stopVoice(); navigate(-1); }} className="p-2 bg-slate-100 rounded-full active:scale-90 transition-transform">{isRTL ? <ArrowRight /> : <ArrowLeft />}</button>
         <div className="w-14 h-14"><TutorAvatar status={tutorStatus} className="w-full h-full" showStatusBadge={false} language={language} /></div>
         <div className="flex-1">
           <h1 className="text-base font-bold text-slate-800 line-clamp-1">{lesson.title}</h1>
           <span className="text-xs text-slate-500">
-            {tutorStatus === 'idle' ? grade : (tutorStatus === 'thinking' ? t.thinking : t.speaking)}
+            {tutorStatus === 'idle' ? (isListening ? t.listening : grade) : (tutorStatus === 'thinking' ? t.thinking : t.speaking)}
           </span>
         </div>
         
-        {/* Stop Voice Button */}
         {tutorStatus === 'speaking' && (
             <button 
                 onClick={stopVoice}
-                className="flex items-center gap-2 bg-red-100 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold animate-pulse"
+                className="flex items-center gap-2 bg-red-100 text-red-600 px-3 py-1.5 rounded-full text-xs font-bold animate-pulse active:scale-95 transition-transform"
             >
                 <VolumeX size={16} />
                 <span>{t.stopVoice}</span>
@@ -189,6 +236,14 @@ const LessonView: React.FC = () => {
               isRTL={isRTL} 
             />
           ))}
+          {isListening && (
+            <div className={`flex w-full mb-4 justify-end`}>
+                <div className="bg-blue-100 text-blue-700 p-3 rounded-2xl rounded-tl-none animate-pulse flex items-center gap-2">
+                    <Mic size={18} />
+                    <span>{t.listening}</span>
+                </div>
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
       </div>
@@ -196,22 +251,44 @@ const LessonView: React.FC = () => {
       <div className="bg-white border-t p-2 md:p-4 shrink-0">
         <div className="max-w-3xl mx-auto space-y-3">
             <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
-                <QuickActionBtn label={t.explain} icon={<Brain size={16} />} color="bg-blue-500" onClick={() => handleInteraction('explain')} disabled={isLoading} />
-                <QuickActionBtn label={t.simplify} icon={<RefreshCw size={16} />} color="bg-green-500" onClick={() => handleInteraction('simplify')} disabled={isLoading} />
-                <QuickActionBtn label={t.story} icon={<MessageCircle size={16} />} color="bg-orange-500" onClick={() => handleInteraction('story')} disabled={isLoading} />
-                <QuickActionBtn label={t.draw} icon={<ImageIcon size={16} />} color="bg-purple-500" onClick={handleImageGeneration} disabled={isLoading} />
-                <QuickActionBtn label={t.quiz} icon={<BookOpen size={16} />} color="bg-indigo-500" onClick={() => handleInteraction('quiz')} disabled={isLoading} />
+                <QuickActionBtn label={t.explain} icon={<Brain size={16} />} color="bg-blue-500" onClick={() => handleInteraction('explain')} disabled={isLoading || isListening} />
+                <QuickActionBtn label={t.simplify} icon={<RefreshCw size={16} />} color="bg-green-500" onClick={() => handleInteraction('simplify')} disabled={isLoading || isListening} />
+                <QuickActionBtn label={t.story} icon={<MessageCircle size={16} />} color="bg-orange-500" onClick={() => handleInteraction('story')} disabled={isLoading || isListening} />
+                <QuickActionBtn label={t.draw} icon={<ImageIcon size={16} />} color="bg-purple-500" onClick={handleImageGeneration} disabled={isLoading || isListening} />
+                <QuickActionBtn label={t.quiz} icon={<BookOpen size={16} />} color="bg-indigo-500" onClick={() => handleInteraction('quiz')} disabled={isLoading || isListening} />
                 <QuickActionBtn 
                   label={t.checkHW} 
                   icon={<Camera size={16} />} 
                   color="bg-rose-500" 
                   onClick={() => fileInputRef.current?.click()} 
-                  disabled={isLoading} 
+                  disabled={isLoading || isListening} 
                 />
             </div>
             <div className="flex items-center gap-2 bg-slate-100 p-2 rounded-2xl">
-                <input type="text" value={inputText} onChange={(e) => setInputText(e.target.value)} placeholder={t.writeQuestion} className="flex-1 bg-transparent border-none outline-none font-medium px-2" disabled={isLoading} dir={isRTL ? 'rtl' : 'ltr'} />
-                <button onClick={() => handleInteraction('custom', inputText)} disabled={!inputText.trim() || isLoading} className="p-3 bg-blue-600 text-white rounded-xl"><Send size={20} className={isRTL ? 'rotate-180' : ''} /></button>
+                <button 
+                  onClick={toggleListening} 
+                  className={`p-3 rounded-xl transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'}`}
+                  disabled={isLoading}
+                >
+                  {isListening ? <StopCircle size={22} /> : <Mic size={22} />}
+                </button>
+                <input 
+                  type="text" 
+                  value={inputText} 
+                  onChange={(e) => setInputText(e.target.value)} 
+                  placeholder={t.writeQuestion} 
+                  className="flex-1 bg-transparent border-none outline-none font-medium px-2" 
+                  disabled={isLoading || isListening} 
+                  dir={isRTL ? 'rtl' : 'ltr'} 
+                  onKeyPress={(e) => e.key === 'Enter' && inputText.trim() && handleInteraction('custom', inputText)}
+                />
+                <button 
+                  onClick={() => handleInteraction('custom', inputText)} 
+                  disabled={!inputText.trim() || isLoading || isListening} 
+                  className="p-3 bg-blue-600 text-white rounded-xl active:scale-95 disabled:opacity-50 transition-all"
+                >
+                  <Send size={20} className={isRTL ? 'rotate-180' : ''} />
+                </button>
             </div>
         </div>
       </div>
@@ -220,7 +297,11 @@ const LessonView: React.FC = () => {
 };
 
 const QuickActionBtn: React.FC<{ icon: React.ReactNode; label: string; color: string; onClick: () => void; disabled: boolean; }> = ({ icon, label, color, onClick, disabled }) => (
-    <button onClick={onClick} disabled={disabled} className={`${color} text-white flex items-center gap-2 px-4 py-2 rounded-full shadow-sm whitespace-nowrap active:scale-95 transition-transform disabled:opacity-50`}>
+    <button 
+      onClick={onClick} 
+      disabled={disabled} 
+      className={`${color} text-white flex items-center gap-2 px-4 py-2 rounded-full shadow-sm whitespace-nowrap active:scale-95 transition-transform disabled:opacity-50`}
+    >
         <span>{icon}</span><span className="text-sm font-bold">{label}</span>
     </button>
 );

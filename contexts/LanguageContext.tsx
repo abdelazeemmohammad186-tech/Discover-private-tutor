@@ -23,7 +23,7 @@ interface Translations {
   quiz: string;
   checkHW: string;
   speak: string;
-  stopVoice: string; // NEW
+  stopVoice: string;
   listening: string;
   writeQuestion: string;
   preparing: string;
@@ -67,7 +67,7 @@ const translations: Record<Language, Translations> = {
     speak: "تحدثي",
     stopVoice: "إيقاف الصوت",
     listening: "أستمع إليك...",
-    writeQuestion: "اكتب سؤالك هنا...",
+    writeQuestion: "اكتب سؤالك / اجابتك هنا",
     preparing: "تجهز الدرس...",
     thinking: "تفكر...",
     speaking: "تتحدث الآن...",
@@ -106,7 +106,7 @@ const translations: Record<Language, Translations> = {
     speak: "Speak",
     stopVoice: "Stop Voice",
     listening: "Listening...",
-    writeQuestion: "Type your question...",
+    writeQuestion: "Type your question / answer here...",
     preparing: "Preparing lesson...",
     thinking: "Thinking...",
     speaking: "Speaking...",

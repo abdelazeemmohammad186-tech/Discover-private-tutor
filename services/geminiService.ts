@@ -39,9 +39,9 @@ export const generateExplanation = async (
   const isAr = language === 'ar';
 
   const basePrompt = isAr 
-    ? `Ø£ÙØª "Ø§ÙÙØ¯Ø±Ø³Ø© Ø§ÙØ®Ø§ØµØ©" ÙÙÙÙØ¬ Discover Ø§ÙÙØµØ±Ù.
-       Ø£ÙØª ÙØ¹ÙÙØ© ØµØ¨ÙØ±Ø©Ø ÙØ·ÙÙØ©Ø ÙÙØ­Ø¨ÙØ¨Ø©. ØªØªØ­Ø¯Ø«ÙÙ Ø¨Ø§ÙÙØºØ© Ø§ÙØ¹Ø±Ø¨ÙØ© Ø§ÙØ¨Ø³ÙØ·Ø© Ø§ÙÙÙØ§Ø³Ø¨Ø© ÙØ·ÙÙ ÙÙ ${grade}.
-       Ø§ÙØ¯Ø±Ø³ Ø§ÙØ­Ø§ÙÙ ÙÙ: "${lessonTitle}".`
+    ? `أنت "المدرسة الخاصة" لمنهج Discover المصري.
+       أنت معلمة صبورة، لطيفة، ومحبوبة. تتحدثين باللغة العربية البسيطة المناسبة لطفل في ${grade}.
+       الدرس الحالي هو: "${lessonTitle}".`
     : `You are a "Private Tutor" for the Egyptian Discover curriculum.
        You are a patient, kind, and friendly teacher. You speak in simple English suitable for a child in ${grade}.
        The current lesson is: "${lessonTitle}".`;
@@ -50,26 +50,26 @@ export const generateExplanation = async (
     case 'custom':
       prompt = `${basePrompt}
       ${isAr 
-        ? `Ø§ÙØ³ÙØ§Ù Ø§ÙØ³Ø§Ø¨Ù (ÙÙØ§Ù Ø§ÙÙØ¹ÙÙØ©): "${contextHistory || 'ÙØ§ ÙÙØ¬Ø¯'}"
-           ÙÙØ§Ù Ø§ÙØ·Ø§ÙØ¨ Ø§ÙØ¢Ù: "${userQuery}".
-           Ø§ÙÙØ·ÙÙØ¨: Ø¥Ø°Ø§ ÙØ§Ù ÙÙØ§Ù Ø§ÙÙØ¹ÙÙØ© Ø§ÙØ³Ø§Ø¨Ù Ø³Ø¤Ø§ÙØ§ÙØ ÙØ§Ø¹ØªØ¨Ø± ÙÙØ§Ù Ø§ÙØ·Ø§ÙØ¨ Ø¥Ø¬Ø§Ø¨Ø© Ø¹ÙÙÙ ÙÙÙÙÙØ§ Ø¨ÙØ·Ù.`
+        ? `السياق السابق (كلام المعلمة): "${contextHistory || 'لا يوجد'}"
+           كلام الطالب الآن: "${userQuery}".
+           المطلوب: إذا كان كلام المعلمة السابق سؤالاً، فاعتبر كلام الطالب إجابة عليه وقيمها بلطف.`
         : `Previous Context (Teacher said): "${contextHistory || 'None'}"
            Student says now: "${userQuery}".`}`;
       break;
     case 'explain':
-      prompt = `${basePrompt} ${isAr ? 'Ø§Ø´Ø±Ø­Ù ÙØ°Ø§ Ø§ÙØ¯Ø±Ø³ Ø¨Ø£Ø³ÙÙØ¨ Ø´ÙÙ ÙÙÙØªØ¹.' : 'Explain this lesson in an interesting way.'}`;
+      prompt = `${basePrompt} ${isAr ? 'اشرحي هذا الدرس بأسلوب شيق وممتع.' : 'Explain this lesson in an interesting way.'}`;
       break;
     case 'simplify':
-      prompt = `${basePrompt} ${isAr ? 'Ø£Ø¹ÙØ¯Ù Ø§ÙØ´Ø±Ø­ Ø¨ÙÙÙØ§Øª Ø£Ø¨Ø³Ø· Ø¬Ø¯Ø§Ù.' : 'Re-explain in much simpler words.'}`;
+      prompt = `${basePrompt} ${isAr ? 'أعيدي الشرح بكلمات أبسط جداً.' : 'Re-explain in much simpler words.'}`;
       break;
     case 'story':
-      prompt = `${basePrompt} ${isAr ? 'Ø§Ø­ÙÙ ÙØµØ© ÙØµÙØ±Ø© ØªÙØ¶Ø­ ÙÙØ±Ø© ÙØ°Ø§ Ø§ÙØ¯Ø±Ø³.' : 'Tell a short story about this concept.'}`;
+      prompt = `${basePrompt} ${isAr ? 'احكِ قصة قصيرة توضح فكرة هذا الدرس.' : 'Tell a short story about this concept.'}`;
       break;
     case 'quiz':
-      prompt = `${basePrompt} ${isAr ? 'Ø§Ø³Ø£ÙÙ Ø³Ø¤Ø§ÙØ§Ù ÙØ§Ø­Ø¯Ø§Ù Ø¨Ø³ÙØ·Ø§Ù Ø­ÙÙ ÙØ°Ø§ Ø§ÙØ¯Ø±Ø³.' : 'Ask one simple question about this lesson.'}`;
+      prompt = `${basePrompt} ${isAr ? 'اسألي سؤالاً واحداً بسيطاً حول هذا الدرس.' : 'Ask one simple question about this lesson.'}`;
       break;
     default:
-      prompt = `${basePrompt} ${isAr ? 'Ø§Ø´Ø±Ø­Ù ÙÙ ÙØ°Ø§ Ø§ÙØ¯Ø±Ø³.' : 'Explain this lesson.'}`;
+      prompt = `${basePrompt} ${isAr ? 'اشرحي لي هذا الدرس.' : 'Explain this lesson.'}`;
   }
 
   try {
@@ -78,15 +78,15 @@ export const generateExplanation = async (
       contents: prompt,
       config: {
         systemInstruction: isAr 
-            ? "Ø£ÙØª ÙØ¹ÙÙØ© Ø§Ø¨ØªØ¯Ø§Ø¦Ù ÙØµØ±ÙØ© ÙØ¯ÙØ¯Ø©. Ø§Ø³ØªØ®Ø¯ÙÙ ÙÙØ¬Ø© ÙØµØ±ÙØ© Ø¨ÙØ¶Ø§Ø¡ Ø¨Ø³ÙØ·Ø©."
+            ? "أنت معلمة ابتدائي مصرية ودودة. استخدمي لهجة مصرية بيضاء بسيطة."
             : "You are a friendly primary school teacher. Use simple English.",
         temperature: 0.7,
       }
     });
-    return response.text || (isAr ? "Ø¹Ø°Ø±Ø§Ù ÙØ§ Ø¨Ø·ÙØ Ø­Ø§ÙÙ ÙØ±Ø© Ø£Ø®Ø±Ù." : "Sorry hero, try again.");
+    return response.text || (isAr ? "عذراً يا بطل، حاول مرة أخرى." : "Sorry hero, try again.");
   } catch (error) {
     console.error("Error generating text:", error);
-    return isAr ? "Ø­Ø¯Ø«Øª ÙØ´ÙÙØ© ÙÙ Ø§ÙØ§ØªØµØ§Ù." : "Connection issue.";
+    return isAr ? "حدثت مشكلة في الاتصال." : "Connection issue.";
   }
 };
 
@@ -104,13 +104,13 @@ export const checkHomework = async (
     const cleanBase64 = imageBase64.split(',')[1] || imageBase64;
 
     const prompt = isAr
-        ? `Ø£ÙØª Ø§ÙÙØ¹ÙÙØ© Ø§ÙØ®Ø§ØµØ©. ÙØ°Ù ØµÙØ±Ø© ÙÙØ§Ø¬Ø¨ ÙØ¯Ø±Ø³Ù ÙØ§Ù Ø¨Ù Ø·Ø§ÙØ¨ ÙÙ ${grade} Ø­ÙÙ Ø¯Ø±Ø³ "${lessonTitle}".
-           ÙÙ ÙØ¶ÙÙ:
-           1. Ø§ÙØ±Ø¦Ù Ø§ÙÙÙØªÙØ¨ ÙÙ Ø§ÙØµÙØ±Ø©.
-           2. ØµØ­Ø­ÙÙ Ø¨ÙØ·Ù Ø´Ø¯ÙØ¯ ÙØ´Ø¬Ø¹ÙÙ.
-           3. Ø¥Ø°Ø§ ÙØ§ÙØª Ø§ÙØ¥Ø¬Ø§Ø¨Ø© ØµØ­ÙØ­Ø©Ø ÙÙÙÙ ÙÙÙØ§Øª ÙØ´Ø¬Ø¹Ø© Ø¬Ø¯Ø§Ù (ÙØ§ Ø¨Ø·ÙØ ÙÙØªØ§Ø²Ø Ø£Ø­Ø³ÙØª).
-           4. Ø¥Ø°Ø§ ÙØ§ÙØª Ø®Ø§Ø·Ø¦Ø©Ø Ø§Ø´Ø±Ø­Ù Ø§ÙØµÙØ§Ø¨ Ø¨Ø¨Ø³Ø§Ø·Ø© ÙØ¨Ø¯ÙÙ ØªÙØ¨ÙØ®.
-           ØªØ­Ø¯Ø«Ù Ø¨ÙÙØ¬Ø© ÙØµØ±ÙØ© Ø¨ÙØ¶Ø§Ø¡ ÙØ·ÙÙØ©.`
+        ? `أنت المعلمة الخاصة. هذه صورة لواجب مدرسي قام به طالب في ${grade} حول درس "${lessonTitle}".
+           من فضلك:
+           1. اقرئي المكتوب في الصورة.
+           2. صححيه بلطف شديد وشجعيه.
+           3. إذا كانت الإجابة صحيحة، قولي كلمات مشجعة جداً (يا بطل، ممتاز، أحسنت).
+           4. إذا كانت خاطئة، اشرحي الصواب ببساطة وبدون توبيخ.
+           تحدثي بلهجة مصرية بيضاء لطيفة.`
         : `You are the Private Tutor. This is an image of homework for ${grade} about "${lessonTitle}".
            Please:
            1. Read the text in the image.
@@ -128,10 +128,10 @@ export const checkHomework = async (
                 ]
             }
         });
-        return response.text || (isAr ? "ÙÙ Ø£Ø³ØªØ·Ø¹ ÙØ±Ø§Ø¡Ø© Ø§ÙØµÙØ±Ø© Ø¨ÙØ¶ÙØ­Ø Ø¬Ø±Ø¨ ÙØ±Ø© Ø£Ø®Ø±Ù." : "I couldn't read the image clearly, try again.");
+        return response.text || (isAr ? "لم أستطع قراءة الصورة بوضوح، جرب مرة أخرى." : "I couldn't read the image clearly, try again.");
     } catch (error) {
         console.error("Error checking homework:", error);
-        return isAr ? "Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«ÙØ§Ø¡ ÙØ­Øµ Ø§ÙØµÙØ±Ø©." : "Error checking image.";
+        return isAr ? "حدث خطأ أثناء فحص الصورة." : "Error checking image.";
     }
 };
 
